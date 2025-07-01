@@ -1,5 +1,5 @@
 <p align="center">
-  <img src="https://user-images.githubusercontent.com/74038190/225813708-98b745f2-7d22-48cf-9150-083f1b00d6c9.gif" width="100%" alt="Hogwarts Banner" />
+  <img src="gryffindor.png" width="100%" alt="Hogwarts Banner" />
 </p>
 
 <h1 align="center">⚡️ Hi, I'm Maham Zahid ⚡️</h1>
@@ -105,7 +105,7 @@
 ---
 
 <p align="center">
-  <img src="https://media.tenor.com/WPZg9JziD0sAAAAC/harry-potter-wand.gif" width="200px" alt="Wand Animation Placeholder"/>
+  <img src="wand.png" width="200px" alt="Wand Animation Placeholder"/>
 </p>
 
 <p align="center"><i>“It is our choices, Maham, that show what we truly are, far more than our skills.”</i> – Albus Dumbledore</p>
