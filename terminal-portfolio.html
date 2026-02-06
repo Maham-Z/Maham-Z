@@ -1,0 +1,741 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Maham Zahid - Terminal Portfolio</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --primary: #ff006e;
+            --secondary: #00d9ff;
+            --accent: #ff006e;
+            --bg: #0a0014;
+            --text: #00d9ff;
+            --dim: #440055;
+        }
+
+        body {
+            font-family: 'Courier New', 'Monaco', monospace;
+            background: var(--bg);
+            color: var(--text);
+            overflow: hidden;
+            height: 100vh;
+        }
+
+        /* Matrix Rain Background */
+        canvas {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: -2;
+        }
+
+        .bg-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.7);
+            z-index: -1;
+            pointer-events: none;
+        }
+
+        /* Terminal Container */
+        .terminal-container {
+            width: 100%;
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+            padding: 20px;
+            overflow: hidden;
+        }
+
+        .terminal-header {
+            text-align: center;
+            margin-bottom: 20px;
+            border: 2px solid var(--primary);
+            padding: 15px;
+            background: rgba(255, 0, 110, 0.05);
+            box-shadow: 0 0 15px rgba(255, 0, 110, 0.2);
+        }
+
+        .terminal-header h1 {
+            font-size: 1.5em;
+            letter-spacing: 3px;
+            text-shadow: 0 0 8px var(--primary);
+            margin-bottom: 5px;
+        }
+
+        .terminal-header p {
+            font-size: 0.9em;
+            color: var(--secondary);
+            letter-spacing: 2px;
+        }
+
+        /* Terminal Screen */
+        .terminal-screen {
+            flex: 1;
+            background: rgba(10, 0, 20, 0.95);
+            border: 2px solid var(--primary);
+            border-radius: 5px;
+            padding: 20px;
+            overflow-y: auto;
+            overflow-x: hidden;
+            box-shadow: inset 0 0 15px rgba(255, 0, 110, 0.1), 0 0 20px rgba(255, 0, 110, 0.15);
+            display: flex;
+            flex-direction: column;
+        }
+
+        .terminal-screen::-webkit-scrollbar {
+            width: 8px;
+        }
+
+        .terminal-screen::-webkit-scrollbar-track {
+            background: rgba(255, 0, 110, 0.05);
+        }
+
+        .terminal-screen::-webkit-scrollbar-thumb {
+            background: var(--secondary);
+            border-radius: 4px;
+        }
+
+        /* Terminal Lines */
+        .terminal-line {
+            margin-bottom: 5px;
+            min-height: 20px;
+            display: flex;
+            align-items: center;
+        }
+
+        .prompt {
+            color: var(--primary);
+            font-weight: bold;
+            margin-right: 8px;
+            user-select: none;
+        }
+
+        .command {
+            color: var(--text);
+            flex: 1;
+        }
+
+        .output {
+            color: var(--secondary);
+            white-space: pre-wrap;
+            word-wrap: break-word;
+            margin: 5px 0;
+            line-height: 1.5;
+        }
+
+        .output.error {
+            color: #ff4444;
+        }
+
+        .output.success {
+            color: #44ff44;
+        }
+
+        .output.info {
+            color: #4488ff;
+        }
+
+        /* Input Area */
+        .terminal-input-area {
+            display: flex;
+            align-items: center;
+            margin-top: 20px;
+            border-top: 1px solid var(--dim);
+            padding-top: 15px;
+        }
+
+        .input-prompt {
+            color: var(--primary);
+            font-weight: bold;
+            margin-right: 8px;
+            user-select: none;
+        }
+
+        #terminal-input {
+            flex: 1;
+            background: transparent;
+            border: none;
+            color: var(--text);
+            font-family: 'Courier New', monospace;
+            font-size: 1em;
+            outline: none;
+        }
+
+        #terminal-input::placeholder {
+            color: var(--dim);
+        }
+
+        /* Blinking Cursor */
+        .cursor {
+            display: inline-block;
+            width: 10px;
+            height: 1.2em;
+            background: var(--secondary);
+            margin-left: 3px;
+            animation: blink-cursor 0.8s infinite;
+        }
+
+        @keyframes blink-cursor {
+            0%, 49% { opacity: 1; }
+            50%, 100% { opacity: 0.4; }
+        }
+
+        /* Help Command Output */
+        .help-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 15px;
+            margin-top: 10px;
+        }
+
+        .help-item {
+            border-left: 2px solid var(--primary);
+            padding-left: 10px;
+            padding-top: 5px;
+            padding-bottom: 5px;
+        }
+
+        .help-command {
+            color: var(--primary);
+            font-weight: bold;
+        }
+
+        .help-description {
+            color: var(--secondary);
+            font-size: 0.9em;
+        }
+
+        /* ASCII Art */
+        .ascii-art {
+            color: var(--primary);
+            white-space: pre;
+            overflow-x: auto;
+            line-height: 1.2;
+            margin: 10px 0;
+            text-shadow: 0 0 8px rgba(255, 0, 110, 0.4);
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .terminal-container {
+                padding: 10px;
+            }
+
+            .terminal-header h1 {
+                font-size: 1.2em;
+            }
+
+            .terminal-screen {
+                padding: 15px;
+            }
+
+            #terminal-input {
+                font-size: 0.9em;
+            }
+        }
+
+
+    </style>
+</head>
+<body>
+    <canvas id="matrix-canvas"></canvas>
+    <div class="bg-overlay"></div>
+
+    <div class="terminal-container">
+        <div class="terminal-header">
+            <h1>MAHAM ZAHID</h1>
+            <p>MACHINE LEARNING ENGINEER | TERMINAL PORTFOLIO v1.0</p>
+        </div>
+
+        <div class="terminal-screen" id="terminal-output">
+            <div class="terminal-line">
+                <span class="prompt">></span>
+                <span class="output">Welcome to Maham's Terminal Portfolio</span>
+            </div>
+            <div class="terminal-line">
+                <span class="prompt">></span>
+                <span class="output">Type 'help' to see available commands</span>
+            </div>
+        </div>
+
+        <div class="terminal-input-area">
+            <span class="input-prompt">user@maham:</span>
+            <span class="input-prompt">~</span>
+            <span class="input-prompt">$</span>
+            <input type="text" id="terminal-input" placeholder="Type a command..." autocomplete="off">
+            <span class="cursor"></span>
+        </div>
+    </div>
+
+    <script>
+        // Matrix Rain Effect
+        const canvas = document.getElementById('matrix-canvas');
+        const ctx = canvas.getContext('2d');
+
+        canvas.width = window.innerWidth;
+        canvas.height = window.innerHeight;
+
+        const chars = 'アイウエオカキクケコサシスセソタチツテトナニヌネノハヒフヘホマミムメモヤユヨラリルレロワヲン0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz';
+        const fontSize = 16;
+        const columns = canvas.width / fontSize;
+        const drops = [];
+
+        for (let i = 0; i < columns; i++) {
+            drops[i] = Math.random() * canvas.height;
+        }
+
+        function drawMatrix() {
+            ctx.fillStyle = 'rgba(10, 0, 20, 0.1)';
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+            ctx.fillStyle = 'rgba(255, 0, 110, 0.2)';
+            ctx.font = fontSize + 'px Arial';
+
+            for (let i = 0; i < drops.length; i++) {
+                const text = chars.charAt(Math.floor(Math.random() * chars.length));
+                ctx.fillText(text, i * fontSize, drops[i] * fontSize);
+
+                if (drops[i] * fontSize > canvas.height && Math.random() > 0.98) {
+                    drops[i] = 0;
+                }
+                drops[i] += 0.5;
+            }
+        }
+
+        setInterval(drawMatrix, 100);
+
+        window.addEventListener('resize', () => {
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+        });
+
+        // Terminal Logic
+        const terminal = document.getElementById('terminal-output');
+        const input = document.getElementById('terminal-input');
+        let history = [];
+        let historyIndex = -1;
+
+        const commands = {
+            help() {
+                return `
+AVAILABLE COMMANDS:
+==================
+
+about              Learn about Maham
+skills             List technical skills
+experience         Show work experience
+projects           View all projects
+contact            Show contact information
+clear              Clear terminal screen
+
+Use 'cat [project]' to see project details:
+  cat license-plate-detector
+  cat sastaGPT
+  cat toxicity-detector`;
+            },
+
+            clear() {
+                terminal.innerHTML = '';
+                return '';
+            },
+
+            about() {
+                return `ABOUT MAHAM ZAHID
+=================
+
+A passionate Machine Learning Engineer building intelligent systems that solve real-world problems. Expertise spans AI/ML, Cloud Architecture, and Full-Stack Development.
+
+Currently focused on:
+- Mental health tech with ML models
+- IoT and Smart automation systems
+- Serverless cloud architectures
+- Generative AI and LLM applications
+
+Location: Lahore, Pakistan
+Experience: Full-Stack ML Engineering
+Status: Open to collaborations and innovative projects`;
+            },
+
+            intro() {
+                return `Command not found. Type 'help' for available commands.`;
+            },
+
+            'ls projects': () => {
+                return `Command not found. Type 'help' for available commands.`;
+            },
+
+            projects() {
+                return `
+FEATURED PROJECTS
+================
+
+[1] License Plate Detection System
+    Real-time traffic monitoring with 92% accuracy
+    Tech: YOLOv8, OpenCV, Custom CNN
+    
+[2] SastaGPT
+    Transformer implementation from scratch
+    Tech: PyTorch, NLP, Transformers
+    
+[3] Toxicity Detection Model
+    Multilingual sentiment analysis (89% F1-score)
+    Tech: LSTM, RNN, BERT
+
+Use 'cat license-plate-detector' or 'cat sastaGPT' or 'cat toxicity-detector' for details`;
+            },
+
+            'cat license-plate-detector': () => {
+                return `
+PROJECT: LICENSE PLATE RECOGNITION SYSTEM
+===========================================
+Real-time traffic monitoring and number plate detection
+
+DESCRIPTION:
+Real-time detector using YOLOv8 and custom CNN for plate recognition.
+Enhanced via OpenCV incantations for improved accuracy across lighting conditions.
+
+FEATURES:
+- Real-time detection capability
+- High accuracy (92%) on diverse datasets
+- Custom-trained model for improved performance
+- Works with various vehicle types
+
+TECHNOLOGY STACK:
+- YOLOv8 (Object Detection)
+- Custom CNN (Plate Recognition)
+- OpenCV (Image Processing)
+- Python
+
+USE CASES:
+- Traffic enforcement automation
+- Parking automation systems
+- Vehicle tracking
+- Security monitoring
+
+STATUS: Deployed and tested in production
+
+Source: Available on GitHub`;
+            },
+
+            'cat sastaGPT': () => {
+                return `
+PROJECT: SASTAOPT - BUDGET-FRIENDLY LLM
+========================================
+Transformer implementation from scratch using attention mechanisms
+
+DESCRIPTION:
+A lightweight transformer model built from scratch to understand and implement
+the core concepts of modern language models. Perfect for learning deep learning.
+
+FEATURES:
+- Multi-head attention mechanism
+- Positional encoding implementation
+- Layer normalization
+- Feed-forward networks
+- Token prediction
+
+PERFORMANCE:
+- 87% token prediction accuracy
+- Lightweight model optimized for inference
+- Can be trained on consumer hardware
+
+TECHNOLOGY STACK:
+- PyTorch (Deep Learning)
+- Transformer Architecture
+- Attention Mechanisms
+- Python
+
+KEY LEARNINGS:
+- Deep understanding of attention mechanisms
+- Self-supervised learning
+- Model optimization
+- Neural network architecture design
+
+STATUS: Educational project, fully functional
+
+Source: Available on GitHub`;
+            },
+
+            'cat toxicity-detector': () => {
+                return `
+PROJECT: TOXICITY DETECTION MODEL
+==================================
+Multilingual sentiment and toxicity classification system
+
+DESCRIPTION:
+Advanced NLP model for detecting toxic content across multiple languages.
+Achieves 89% F1-score with support for English, Urdu, and Hindi.
+
+FEATURES:
+- Multilingual support (3+ languages)
+- High F1-score (89%) across all languages
+- Real-time inference
+- REST API deployment
+- Rate limiting included
+
+SUPPORTED LANGUAGES:
+- English
+- Urdu
+- Hindi
+- Extensible to more languages
+
+TECHNOLOGY STACK:
+- LSTM and RNN architectures
+- Multilingual BERT
+- FastAPI (API)
+- Python
+
+APPLICATIONS:
+- Content moderation systems
+- Social media monitoring
+- Online safety platforms
+- Community management
+- Harmful content detection
+
+PERFORMANCE:
+- 89% F1-score
+- Sub-100ms inference time
+- Scalable to handle millions of requests
+
+STATUS: Deployed with REST API
+
+Source: Available on GitHub`;
+            },
+
+            'cat experience': () => {
+                return `
+WORK EXPERIENCE
+===============
+
+SOFTWARE ENGINEER (ML/AI)
+Gaper.io | June 2024 - September 2024
+
+ACHIEVEMENTS:
+
+AI Avatar Generation
+  - Deployed Stable Diffusion pipeline with OpenPose & ControlNet
+  - Handled 100K+ monthly requests
+  - Implemented OAuth and security features
+  - Technology: Stable Diffusion, ControlNet, Cloud deployment
+
+Vision Search Engine
+  - Built semantic search system with 95% accuracy
+  - Utilized FastAPI, Vertex AI, Pinecone
+  - Implemented vector embeddings and similarity search
+  - Technology: FastAPI, React, Vertex AI, Pinecone, GCS
+
+Full-Stack Architecture
+  - Engineered scalable microservices
+  - Implemented CloudFront CDN, Lambda functions, EC2 Fargate
+  - Designed fault-tolerant systems
+  - Technology: AWS, GCP, Docker, Kubernetes
+
+Performance Optimization
+  - Reduced latency by 40% using event-driven patterns
+  - Implemented caching strategies
+  - Optimized database queries
+  - Technology: Event-driven architecture, caching layers
+
+KEY SKILLS DEMONSTRATED:
+- Cloud architecture (GCP, AWS)
+- Full-stack development
+- ML model deployment
+- API design and optimization
+- Microservices architecture`;
+            },
+
+            'cat skills': () => {
+                return `
+TECHNICAL SKILLS
+================
+
+PROGRAMMING LANGUAGES:
+  Python (Expert)          - ML, Data Science, Backend
+  JavaScript (Advanced)    - Frontend, Node.js
+  TypeScript (Advanced)    - Type-safe development
+  C++ (Intermediate)       - Performance-critical code
+  Java (Intermediate)      - Enterprise development
+  Haskell (Beginner)       - Functional programming
+
+MACHINE LEARNING & AI:
+  PyTorch (Expert)         - Deep learning framework
+  TensorFlow (Advanced)    - ML workflows, Keras
+  YOLOv8 (Expert)          - Object detection
+  Scikit-learn (Advanced)  - Classical ML algorithms
+  LangChain (Intermediate) - LLM applications
+  LSTM/RNN (Expert)        - Sequence modeling
+  Transformers (Advanced)  - Modern NLP
+  Vertex AI (Advanced)     - Google Cloud ML
+
+FRONTEND & BACKEND:
+  React (Advanced)         - Modern web applications
+  Node.js (Advanced)       - Backend JavaScript
+  FastAPI (Expert)         - Python API framework
+  Flask (Advanced)         - Lightweight Python framework
+  Flutter (Intermediate)   - Mobile development
+  Android Studio (Basic)   - Android development
+
+CLOUD & DEVOPS:
+  GCP (Advanced)           - Vertex AI, Cloud Functions, Storage
+  AWS (Intermediate)       - EC2, Lambda, S3
+  Docker (Advanced)        - Containerization
+  Kubernetes (Intermediate)- Orchestration
+  Git (Expert)             - Version control
+
+DATA & DATABASES:
+  Pandas (Expert)          - Data manipulation
+  NumPy (Expert)           - Numerical computing
+  SQL (Advanced)           - Database queries
+  MongoDB (Intermediate)   - NoSQL databases
+  Firebase (Intermediate)  - Backend as a Service
+
+LIBRARIES & TOOLS:
+  Pinecone (Advanced)      - Vector databases
+  OpenCV (Advanced)        - Computer vision
+  Figma (Intermediate)     - UI/UX design
+  Streamlit (Advanced)     - Data applications
+  Gradio (Intermediate)    - ML demos
+  Canva (Basic)            - Design tool`;
+            },
+
+            'cat resume': () => {
+                return `
+RESUME SUMMARY
+==============
+
+MAHAM ZAHID
+Machine Learning Engineer | Full-Stack Developer
+
+CONTACT:
+  Email: mahamzahid7@gmail.com
+  LinkedIn: linkedin.com/in/maham-zahid-69a95a242/
+  Phone: +92 340 6164929
+  Location: Lahore, Pakistan
+
+PROFESSIONAL SUMMARY:
+  Passionate ML Engineer with expertise in AI/ML, Cloud Architecture,
+  and Full-Stack Development. Track record of building scalable,
+  production-grade intelligent systems.
+
+KEY COMPETENCIES:
+  - Machine Learning & Deep Learning
+  - Cloud Architecture (GCP, AWS)
+  - Full-Stack Development
+  - API Design & Optimization
+  - Microservices Architecture
+  - Data Engineering
+  - MLOps & Deployment
+
+CERTIFICATIONS:
+  - Advanced Machine Learning (In Progress)
+  - Cloud Architecture (GCP)
+  - Professional Development
+
+EDUCATION:
+  Pursuing continuous learning in:
+  - Generative AI & LLMs
+  - Advanced ML Ops
+  - Distributed Systems
+  - Kubernetes & Container Orchestration
+
+INTERESTS:
+  Open source contributions, research collaborations, mentoring,
+  and knowledge sharing in AI/ML community.
+
+AVAILABILITY:
+  Open to innovative ML projects, consulting, and collaborations`;
+            },
+
+            contact() {
+                return `
+CONTACT INFORMATION
+===================
+
+Email:    mahamzahid7@gmail.com
+Phone:    +92 340 6164929
+LinkedIn: linkedin.com/in/maham-zahid-69a95a242/
+Location: Lahore, Pakistan`;
+            },
+
+            default() {
+                return `Command not found. Type 'help' for available commands.`;
+            }
+        };
+
+        function executeCommand(cmd) {
+            const trimmedCmd = cmd.trim().toLowerCase();
+            
+            if (!trimmedCmd) return;
+
+            // Display command
+            const cmdLine = document.createElement('div');
+            cmdLine.className = 'terminal-line';
+            cmdLine.innerHTML = `<span class="prompt">></span><span class="command">${cmd}</span>`;
+            terminal.appendChild(cmdLine);
+
+            // Execute command
+            let output = '';
+            
+            if (commands[trimmedCmd]) {
+                output = commands[trimmedCmd]();
+            } else {
+                output = commands.default();
+            }
+
+            // Display output
+            if (output) {
+                const outputLine = document.createElement('div');
+                outputLine.className = 'terminal-line';
+                outputLine.innerHTML = `<span class="output">${output}</span>`;
+                terminal.appendChild(outputLine);
+            }
+
+            // Scroll to bottom
+            terminal.scrollTop = terminal.scrollHeight;
+
+            // Add to history
+            history.push(cmd);
+            historyIndex = history.length;
+        }
+
+        // Input handling
+        input.addEventListener('keydown', (e) => {
+            if (e.key === 'Enter') {
+                executeCommand(input.value);
+                input.value = '';
+            } else if (e.key === 'ArrowUp') {
+                e.preventDefault();
+                historyIndex = Math.max(0, historyIndex - 1);
+                input.value = history[historyIndex] || '';
+            } else if (e.key === 'ArrowDown') {
+                e.preventDefault();
+                historyIndex = Math.min(history.length, historyIndex + 1);
+                input.value = history[historyIndex] || '';
+            }
+        });
+
+        // Focus input on page load
+        window.addEventListener('load', () => {
+            input.focus();
+        });
+
+        // Click to focus
+        document.addEventListener('click', () => {
+            input.focus();
+        });
+    </script>
+</body>
+</html>
