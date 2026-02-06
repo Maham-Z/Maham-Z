@@ -25,11 +25,6 @@ experience         # Work experience
 projects           # Featured projects
 contact            # Get in touch
 
-cat license-plate-detector    # See project details
-cat sastaGPT
-cat toxicity-detector
-```
-
 ---
 
 ## About Me
@@ -141,19 +136,6 @@ Pandas | NumPy | SQL | MongoDB | Firebase
 
 ### Libraries & Tools
 Pinecone | OpenCV | Figma | Streamlit | Gradio | Canva
-
----
-
-## GitHub Stats
-
-<div align="center">
-
-![GitHub Stats](https://github-readme-stats.vercel.app/api?username=mahamzahid&show_icons=true&theme=tokyonight&hide_border=true)
-
-![Top Languages](https://github-readme-stats.vercel.app/api/top-langs/?username=mahamzahid&layout=compact&theme=tokyonight&hide_border=true)
-
-</div>
-
 ---
 
 ## Contact & Connect
